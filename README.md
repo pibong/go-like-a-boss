@@ -21,29 +21,11 @@ serviceaccount/gitlab    1         5m
 ```
 
 ## Add kubernetes cluster to the project
-* `kubectl get endpoints | grep kubernetes | awk '{print $2}' | cut -d':' -f1`
-	- 104.198.32.187
-* `kubectl config view --minify=true --flatten | grep certificate-authority-data | awk '{print $2}' | base64 -d`
-
-```
------BEGIN CERTIFICATE-----
-MIIDDDCCAfSgAwIBAgIRAMYMzk0Lh3n+jWrRw6YGxH0wDQYJKoZIhvcNAQELBQAw
-...
-34aQDKZdUfaoVM1opNcGbQ==
------END CERTIFICATE-----
-```
-
-* `kubectl --namespace=go-like-boss-project describe secret gitlab-token-sf7sn | grep "token:" | awk '{print $2}'`
-
-```
-eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...GfDo_A_IEq96ZjU6SQozeEQ
-```
-
-- Kubernetes cluster name: gke-cluster-dev
-- API URL: https://104.198.32.187
-- CA Certificate: "-----BEGIN CERTIFICATE-----...-----END CERTIFICATE-----"
-- Token: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...GfDo_A_IEq96ZjU6SQozeEQ
-- Project namespace: go-like-boss-project
+* Kubernetes cluster name: gke-cluster-dev
+* API endpoint: `kubectl get endpoints | grep kubernetes | awk '{print $2}' | cut -d':' -f1`
+* CA Certificate: `kubectl config view --minify=true --flatten | grep certificate-authority-data | awk '{print $2}' | base64 -d`
+* Token: `kubectl --namespace=go-like-boss-project describe secret gitlab-token-sf7sn | grep "token:" | awk '{print $2}'`
+* Project namespace: go-like-boss-project
 
 
 ## Add files in GitLab repository
@@ -61,8 +43,9 @@ eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...GfDo_A_IEq96ZjU6SQozeEQ
 * `git commit -m "first commit"`
 * `git push`
 
+## Let's do the magic to GitLab and K8S
 
-## Docker image foo/gocompile_env
+#### Docker image foo/gocompile_env
 **Build a Docker image which is ready for go compiling, testing and code linting**
 
 * `cd docker; docker build --tag 'gocompile_env:0.1' .`
