@@ -1,0 +1,69 @@
+image: pibong/gocompile_env:0.1         # using this image which contains all tools to compile and test code
+
+cache:   
+  paths:
+  - /apt-cache
+  - /go/src/github.com
+  - /go/src/golang.org
+
+stages:
+- test
+- build
+
+# The problem is that to be able to use go get, one needs to put the repository in the $GOPATH. So for example if your gitlab domain is mydomainperso.com, and that your repository is repos/projectname, and
+# the default GOPATH being /go, then you'd need to have your repository in /go/src/mydomainperso.com/repos/projectname 
+# Thus, copying files
+before_script:
+- mkdir -p "/go/src/gitlab.com/${CI_PROJECT_NAMESPACE}"                         # mkdir /go/src/gitlab.com/pibong
+- cp -r "${CI_PROJECT_DIR}/" "/go/src/gitlab.com/${CI_PROJECT_NAMESPACE}/"      # cp -r /builds/pibong/go-like-a-boss/ /go/src/gitlab.com/pibong/
+- cd "/go/src/"                                                                 # cd /go/src/
+- export CC=clang-5.0                                                           # mandatory for executing "go test -msan -short"
+- make -f "gitlab.com/${CI_PROJECT_PATH}/Makefile" dep                          # resolve dependencies
+- go list ./... | grep -Ev "/vendor/|golang.org/x/"
+- go list gitlab.com/pibong/... | grep -Ev "/vendor/|golang.org/x/"
+
+## CI_PROJECT_NAMESPACE=pibong
+## CI_PROJECT_DIR=/builds/pibong/go-like-a-boss
+## CI_PROJECT_PATH=pibong/go-like-a-boss
+## before_script:  defines the commands to run in the Docker container right before the job is actually done
+
+
+unit_tests:
+  stage: test
+  script:
+  - make -f "gitlab.com/${CI_PROJECT_PATH}/Makefile" test
+
+race_detector:
+  stage: test
+  script:
+  - make -f "gitlab.com/${CI_PROJECT_PATH}/Makefile" race
+
+memory_sanitizer:
+  stage: test
+  script:
+  - make -f "gitlab.com/${CI_PROJECT_PATH}/Makefile" msan
+
+code_coverage:
+  stage: test
+  script:
+  - make -f "gitlab.com/${CI_PROJECT_PATH}/Makefile" coverage
+
+code_coverage_report:
+  stage: test
+  script:
+  - make -f "gitlab.com/${CI_PROJECT_PATH}/Makefile" coverhtml
+  only:
+  - master
+
+lint_code:
+  stage: test
+  script:
+  - make -f "gitlab.com/${CI_PROJECT_PATH}/Makefile" lint
+
+build:
+  stage: build
+  script:
+  - make -f "gitlab.com/${CI_PROJECT_PATH}/Makefile"
+  artifacts:
+    paths:
+    - godummy
